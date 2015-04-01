@@ -166,7 +166,7 @@ public class MainActivity extends LifecycleLoggingActivity {
         // Create an intent that will download the image from the web.
     	// TODO -- you fill in here, replacing "false" with the proper
     	// code.
-    	Intent downloadImageIntent = new Intent(Intent.ACTION_WEB_SEARCH);
+    	Intent downloadImageIntent = new Intent();
     	downloadImageIntent.setData(url);
         return downloadImageIntent;
     }
