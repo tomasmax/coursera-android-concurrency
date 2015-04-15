@@ -35,6 +35,8 @@ public class OutputStrategy {
         // another Thread that sleeps for 0.5 seconds to let the user
         // see what's going on.
         // @@ TODO - you fill in here.
+    	MainActivity mainActivity = mOuterClass.get();
+    	mainActivity.print(outputString);
     }
 
     /**

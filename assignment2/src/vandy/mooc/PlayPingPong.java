@@ -111,6 +111,14 @@ public class PlayPingPong implements Runnable {
             // Handler is the "obj" to use for the reply and (2)
             // sending the Message to the PING_THREAD's Handler.
             // @@ TODO - you fill in here.
+            if (mMyType.equals(PingPong.PING)) {
+            	Handler pingHandler = mHandlers[PingPong.PING.ordinal()];
+            	Handler pongHandler = mHandlers[PingPong.PONG.ordinal()];
+            	
+            	Message msg = pingHandler.obtainMessage(PingPong.PING.ordinal(), pongHandler);
+            	
+            	pingHandler.sendMessage(msg);
+            }
         }
 
         /**
@@ -123,22 +131,38 @@ public class PlayPingPong implements Runnable {
             // with all its iterations yet.
             // @@ TODO - you fill in here, replacing "true" with the
             // appropriate code.
-            if (true) {
+        	PingPong pingpongType = PingPong.values()[reqMsg.what];
+        	System.out.println("handlerMessage received --> " + pingpongType.name());
+        	
+            if (mIterationsCompleted < mMaxIterations) {
+            	System.out.println("**Completed pingpongType --> " + pingpongType.toString());
+            	mIterationsCompleted++;
+            	mOutputStrategy.print(pingpongType.name() + "(" + mIterationsCompleted + ")");
+            	
             } else {
                 // Shutdown the HandlerThread to the main PingPong
                 // thread can join with it.
                 // @@ TODO - you fill in here.
+            	getLooper().quit();
             }
 
             // Create a Message that contains the Handler as the
             // reqMsg "target" and our Handler as the "obj" to use for
             // the reply.
             // @@ TODO - you fill in here.
+            Handler replyHandler = (Handler) reqMsg.obj;
+            
+            PingPong receiver = pingpongType.equals(PingPong.PING) ? PingPong.PONG : PingPong.PING;
+            
+            System.out.println("****Sent to --> " + receiver.toString());
+            
+            Message msg = replyHandler.obtainMessage(receiver.ordinal(), mHandlers[receiver.ordinal()]);
 
             // Return control to the Handler in the other
             // HandlerThread, which is the "target" of the msg
             // parameter.
             // @@ TODO - you fill in here.
+            replyHandler.sendMessage(msg);
 
             return true;
         }
@@ -166,14 +190,27 @@ public class PlayPingPong implements Runnable {
        
         // Create the ping and pong threads.
         // @@ TODO - you fill in here.
+        PingPongThread pingThread = new PingPongThread(PingPong.PING);
+        PingPongThread pongThread = new PingPongThread(PingPong.PONG);
 
         // Start ping and pong threads, which cause their Looper to
         // loop.
         // @@ TODO - you fill in here.
+        pingThread.start();
+        pongThread.start();
 
         // Barrier synchronization to wait for all work to be done
         // before exiting play().
         // @@ TODO - you fill in here.
+        try {
+        	
+			pingThread.join();
+			pongThread.join();
+			
+		} catch (InterruptedException e) {
+
+			e.printStackTrace();
+		}
 
         // Let the user know we're done.
         mOutputStrategy.print("Done!");
