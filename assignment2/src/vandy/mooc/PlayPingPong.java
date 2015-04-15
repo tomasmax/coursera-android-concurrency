@@ -137,7 +137,7 @@ public class PlayPingPong implements Runnable {
             if (mIterationsCompleted < mMaxIterations) {
             	System.out.println("**Completed pingpongType --> " + pingpongType.toString());
             	mIterationsCompleted++;
-            	mOutputStrategy.print(pingpongType.name() + "(" + mIterationsCompleted + ")");
+            	mOutputStrategy.print(pingpongType.name() + "(" + mIterationsCompleted + ") \n");
             	
             } else {
                 // Shutdown the HandlerThread to the main PingPong
