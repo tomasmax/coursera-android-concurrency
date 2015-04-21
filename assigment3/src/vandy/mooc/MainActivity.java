@@ -1,5 +1,6 @@
 package vandy.mooc;
 
+
 import java.io.File;
 
 import android.app.Activity;
@@ -21,7 +22,10 @@ import android.widget.Toast;
  * then uses Intents and other Activities to download the image and
  * view it.
  */
-public class MainActivity extends LifecycleLoggingActivity implements DownloadAndFilterImageTaskFragment.TaskCallbacks {
+public class MainActivity 
+extends LifecycleLoggingActivity 
+implements DownloadAndFilterImageTaskFragment.TaskCallbacks
+{
     /**
      * Debugging tag used by the Android logger.
      */
@@ -31,7 +35,9 @@ public class MainActivity extends LifecycleLoggingActivity implements DownloadAn
      * A value that uniquely identifies the request to download an
      * image.
      */
-    private static final int DOWNLOAD_IMAGE_REQUEST = 1;
+    protected static final int DOWNLOAD_IMAGE_REQUEST = 1;
+
+	private static final String TAG_DL_IMG_TASK_FRAGMENT = "download_image";
 
     /**
      * EditText field for entering the desired URL to an image.
@@ -44,11 +50,11 @@ public class MainActivity extends LifecycleLoggingActivity implements DownloadAn
      */
     private Uri mDefaultUrl =
         Uri.parse("http://www.dre.vanderbilt.edu/~schmidt/robot.png");
+
     
     private DownloadAndFilterImageTaskFragment mTaskFragment;
     
-    private static final String DOWNLOAD_IMG_TASK_FRAGMENT = "download_image";
-
+    
     /**
      * Hook method called when a new instance of Activity is created.
      * One time initialization code goes here, e.g., UI layout and
@@ -70,20 +76,24 @@ public class MainActivity extends LifecycleLoggingActivity implements DownloadAn
         // Cache the EditText that holds the urls entered by the user
         // (if any).
         // @@ TODO -- you fill in here.
-    	mUrlEditText = (EditText) findViewById(R.id.url);
+    	mUrlEditText = (EditText) findViewById(R.id.url);   
     	
     	FragmentManager fm = getFragmentManager();
-    	mTaskFragment = (DownloadAndFilterImageTaskFragment) fm.findFragmentByTag(DOWNLOAD_IMG_TASK_FRAGMENT);
+        mTaskFragment = (DownloadAndFilterImageTaskFragment) fm.findFragmentByTag(TAG_DL_IMG_TASK_FRAGMENT);
+
+        // If the Fragment is non-null, then it is currently being
+        // retained across a configuration change.
+        if (mTaskFragment == null) 
+        {
+          mTaskFragment = new DownloadAndFilterImageTaskFragment();
+          fm.beginTransaction().add(mTaskFragment, TAG_DL_IMG_TASK_FRAGMENT).commit();
+        }
     	
-    	if (mTaskFragment == null) {
-    		mTaskFragment = new DownloadAndFilterImageTaskFragment();
-    		fm.beginTransaction().add(mTaskFragment, DOWNLOAD_IMG_TASK_FRAGMENT).commit();
-    	}
     }
 
     /**
      * Called by the Android Activity framework when the user clicks
-     * the "Find Address" button.
+     * the "Download Image" button.
      *
      * @param view The view.
      */
@@ -92,54 +102,16 @@ public class MainActivity extends LifecycleLoggingActivity implements DownloadAn
             // Hide the keyboard.
             hideKeyboard(this,
                          mUrlEditText.getWindowToken());
+
+            // execute the async tasks to download and filter the downloaded image.
+            Uri uri = getUrl();
+            mTaskFragment.executeTask(uri);
             
-            // Start the async task to download and filter the image
-            mTaskFragment.executeTask(getUrl());
-           
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * Hook method called back by the Android Activity framework when
-     * an Activity that's been launched exits, giving the requestCode
-     * it was started with, the resultCode it returned, and any
-     * additional data from it.
-     */
-    @Override
-    protected void onActivityResult(int requestCode,
-                                    int resultCode,
-                                    Intent data) {
-        // Check if the started Activity completed successfully.
-        // @@ TODO -- you fill in here, replacing true with the right
-        // code.
-        if (resultCode == RESULT_OK) {
-            // Check if the request code is what we're expecting.
-            // @@ TODO -- you fill in here, replacing true with the
-            // right code.
-            if (requestCode == DOWNLOAD_IMAGE_REQUEST) {
-                // Call the makeGalleryIntent() factory method to
-                // create an Intent that will launch the "Gallery" app
-                // by passing in the path to the downloaded image
-                // file.
-                // @@ TODO -- you fill in here.
-
-                // Start the Gallery Activity.
-                // @@ TODO -- you fill in here.
-            	startActivity(makeGalleryIntent(data.getData().toString()));	
-            }
-        }
-        // Check if the started Activity did not complete successfully
-        // and inform the user a problem occurred when trying to
-        // download contents at the given URL.
-        // @@ TODO -- you fill in here, replacing true with the right
-        // code.
-        else if (resultCode != RESULT_OK) {
-        	Toast toast = Toast.makeText(this, "a problem occurred when trying to download contents at the given URL", Toast.LENGTH_LONG);
-        	toast.show();
-        }
-    }    
 
     /**
      * Factory method that returns an Intent for viewing the
@@ -150,13 +122,22 @@ public class MainActivity extends LifecycleLoggingActivity implements DownloadAn
         // the image.
     	// TODO -- you fill in here, replacing "false" with the proper
     	// code.
+    	
+    	Log.d(TAG, "####### pathToImageFile="+pathToImageFile);
+    	
+    	// It doesn't seem to be able to parse the path to Uri.
+    	// Will convert from File to Uri.
     	File file = new File(pathToImageFile);
     	Uri imageData = Uri.fromFile(file);
+    	//Uri imageData = Uri.parse(pathToImageFile);
     	
     	Intent galleryIntent = new Intent(Intent.ACTION_VIEW);
     	galleryIntent.setDataAndType(imageData, "image/*");
-        return galleryIntent;
+    	
+    	return galleryIntent;
+    	
     }
+
 
     /**
      * Get the URL to download based on user input.
@@ -199,30 +180,25 @@ public class MainActivity extends LifecycleLoggingActivity implements DownloadAn
                                     0);
     }
 
+    
 	@Override
-	public void onDownloadAndFilterImagePreExecute() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onDownloadAndFilterImagePreExecute() {}
 
 	@Override
-	public void onDownloadAndFilterImageProgressUpdate(int percent) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onDownloadAndFilterImageProgressUpdate(int percent) {}
 
 	@Override
-	public void onDownloadAndFilterImageCancelled() {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onDownloadAndFilterImageCancelled() {}
 
+	
 	@Override
-	public void onDownloadAndFilterImagePostExecute(Uri result) {
-		if (result == null)
+	public void onDownloadAndFilterImagePostExecute(Uri result)
+	{		
+		if (null == result)
 			return;
 		
-		startActivity(makeGalleryIntent(result.toString()));
+		Intent galleryIntent = makeGalleryIntent(result.toString());
+    	startActivity(galleryIntent);
 		
 	}
 }
